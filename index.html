@@ -391,7 +391,6 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             transition: all 0.2s;
-            group: true;
         }
         .task-item:hover { border-color: rgba(59,130,246,0.4); }
         .task-item.done { opacity: 0.5; }
@@ -710,6 +709,18 @@
                     <div class="status-dot" id="statusDot"></div>
                 </div>
 
+                <div style="padding: 0 1.5rem 1rem 1.5rem; border-bottom: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">РЕЖИМ АССИСТЕНТА (СУБАГЕНТЫ)</div>
+                    <select id="agentModeSelect" style="width: 100%; padding: 0.5rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: 'Manrope', sans-serif; cursor: pointer;">
+                        <option value="general">🤖 Основной Ассистент (РОП)</option>
+                        <option value="analyst">📊 Аналитик (Данные и KPI)</option>
+                        <option value="coach">🎯 Тренер / Коуч (Скрипты и речевые модули)</option>
+                        <option value="copywriter">✍️ Копирайтер / SMM (Продающие посты)</option>
+                        <option value="designer">🎨 Дизайнер (Структура презентаций)</option>
+                        <option value="hr">🧘 HR / Ментор (Адаптация и выгорание)</option>
+                    </select>
+                </div>
+
                 <div class="chat-messages" id="chatMessages"></div>
 
                 <div class="chat-input-area">
@@ -912,6 +923,7 @@ let messages = [];
 let isRecording = false;
 let recognition = null;
 let tasks = JSON.parse(localStorage.getItem('uk_tasks') || '[]');
+let liveSheetData = "Данные из Google Таблиц пока не загружены.";
 
 // Seed default tasks if empty
 if (tasks.length === 0) {
@@ -930,8 +942,21 @@ if (tasks.length === 0) {
 updateDateTime();
 setInterval(updateDateTime, 1000);
 renderTasks();
+loadSheetData();
 
-
+async function loadSheetData() {
+    try {
+        const res = await fetch('/api/data');
+        if (res.ok) {
+            const json = await res.json();
+            const rows = json.data.slice(0, 150); // limit rows to save tokens
+            liveSheetData = `Свежие данные из Google Таблицы (лист ${json.sheetName}):\n` + rows.map(r => r.join(' | ')).join('\n');
+            console.log('Google Sheets data loaded:', json.rowCount, 'rows');
+        }
+    } catch (e) {
+        console.error("Ошибка загрузки таблицы:", e);
+    }
+}
 
 // Welcome message
 setTimeout(() => {
@@ -1112,11 +1137,23 @@ async function sendMessage() {
     messages.push({ role: 'user', content: text });
 
     try {
-        const systemPrompt = `Ты AI-ассистент Геннадия — руководителя отдела продаж онлайн-академии Ukids (развитие soft skills для детей 6-15 лет). 
-Говори кратко, конкретно, по-русски. Без лишних вступлений.
-Контекст: команда 5 менеджеров, неделя: 348 лидов, 58 оплат, конверсия ВК→Оплата 33.9%, выручка 1.42М руб.
-Текущие задачи: ${getOpenTasksList()}
-Помогай с: управлением задачами, аналитикой продаж, мотивацией команды, профилактикой выгорания, обучением стажёров.`;
+        const agentMode = document.getElementById('agentModeSelect') ? document.getElementById('agentModeSelect').value : 'general';
+        const baseContext = `Контекст команды продаж: 5 менеджеров.\nТекущие задачи РОПа: ${getOpenTasksList()}\n\n${liveSheetData}`;
+        
+        let systemPrompt = '';
+        if (agentMode === 'analyst') {
+            systemPrompt = `Ты выдающийся Data Scientist и Финансовый Аналитик. ${baseContext}\nАнализируй показатели, ищи инсайты, точки роста и узкие горлышки воронки продаж Ukids. Форматируй ответы четко: цифры, выводы, рекомендации (используй markdown таблицы).`;
+        } else if (agentMode === 'coach') {
+            systemPrompt = `Ты опытный бизнес-тренер и коуч по продажам. ${baseContext}\nПомогай составлять скрипты для продуктов Ukids (soft skills), отрабатывать сложные возражения родителей и дожимать клиентов на оплату. Давай конкретные речевые модули.`;
+        } else if (agentMode === 'copywriter') {
+            systemPrompt = `Ты креативный Копирайтер и SMM-специалист в сфере EdTech. ${baseContext}\nПиши продающие, мотивационные и вовлекающие тексты и рассылки для родителей. Используй сторителлинг, живой язык и четкую структуру.`;
+        } else if (agentMode === 'designer') {
+            systemPrompt = `Ты UX/UI дизайнер и спец по презентациям. ${baseContext}\nПомогай структурировать информацию для слайдов для вебинаров Ukids, предлагай визуальные решения, разбивай текст на буллиты и давай советы по визуальной композиции.`;
+        } else if (agentMode === 'hr') {
+            systemPrompt = `Ты заботливый HR-директор и Ментор. ${baseContext}\nТвоя цель — предотвращать выгорание менеджеров, контролировать баланс работы и жизни (work-life balance), а также помогать с планами адаптации новых стажеров.`;
+        } else {
+            systemPrompt = `Ты AI-ассистент Геннадия — руководителя отдела продаж онлайн-академии Ukids (развитие soft skills для детей 6-15 лет).\n${baseContext}\nГовори кратко, конкретно, по-русски. Без лишних вступлений. Помогай маршрутизировать запросы и управлять задачами.`;
+        }
 
         const resp = await fetch('/api/claude', {
             method: 'POST',
