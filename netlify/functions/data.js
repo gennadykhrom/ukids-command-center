@@ -35,10 +35,10 @@ exports.handler = async function(event, context) {
 
         const rows = response.data.values || [];
         
-        // Защита от переполнения токенов: берем заголовки и последние 150 строк (самые свежие)
+        // Защита от переполнения токенов: берем заголовки и последние 50 строк (самые свежие)
         let limitedRows = rows;
-        if (rows.length > 150) {
-            limitedRows = [rows[0], ...rows.slice(-149)];
+        if (rows.length > 50) {
+            limitedRows = [rows[0], ...rows.slice(-49)];
         }
         
         return {
