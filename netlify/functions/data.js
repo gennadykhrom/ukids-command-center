@@ -35,6 +35,12 @@ exports.handler = async function(event, context) {
 
         const rows = response.data.values || [];
         
+        // Защита от переполнения токенов: берем заголовки и последние 150 строк (самые свежие)
+        let limitedRows = rows;
+        if (rows.length > 150) {
+            limitedRows = [rows[0], ...rows.slice(-149)];
+        }
+        
         return {
             statusCode: 200,
             headers: {
@@ -43,8 +49,8 @@ exports.handler = async function(event, context) {
             },
             body: JSON.stringify({
                 sheetName: sheetTitle,
-                rowCount: rows.length,
-                data: rows
+                rowCount: limitedRows.length,
+                data: limitedRows
             }),
         };
 
