@@ -566,6 +566,7 @@
                     <div style="font-weight:600;font-size:0.85rem">Геннадий</div>
                     <div style="font-size:0.7rem;color:var(--text-secondary)">Руководитель отдела продаж</div>
                 </div>
+                <button title="Админ-панель" onclick="openAdminLogin()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;margin-left:0.5rem;opacity:0.5;transition:all 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">⚙️</button>
             </div>
         </div>
     </header>
@@ -579,6 +580,7 @@
         <button class="nav-tab" onclick="switchTab('assistant',this)">🤖 AI Ассистент</button>
         <button class="nav-tab" onclick="switchTab('analytics',this)">📈 Аналитика</button>
         <button class="nav-tab" onclick="switchTab('wellbeing',this)">🧘 Баланс</button>
+        <button class="nav-tab" onclick="switchTab('export',this)">📥 Выгрузка</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -903,6 +905,83 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div id="export" class="tab-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+            <div>
+                <h2 style="font-size:1.5rem;font-weight:700">Выгрузка отчетов</h2>
+                <p style="color:var(--text-secondary);font-size:0.875rem;margin-top:0.25rem">Сохраняйте данные напрямую в новую вкладку Google Таблицы</p>
+            </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:800px">
+            <div style="display:flex;flex-direction:column;gap:1.5rem">
+                <div>
+                    <label style="display:block;font-size:0.875rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-secondary)">Что выгружаем?</label>
+                    <select id="exportTypeSelect" style="width:100%;padding:0.875rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-family:'Manrope',sans-serif">
+                        <option value="chat_history">💬 Текущий диалог с AI (История запросов)</option>
+                        <option value="tasks">✅ Список открытых задач</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:0.875rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-secondary)">Название новой вкладки в Таблице</label>
+                    <input type="text" id="exportSheetName" value="Выгрузка_Отчет" style="width:100%;padding:0.875rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-family:'Manrope',sans-serif">
+                </div>
+                <div style="display:flex;align-items:center;gap:1rem;margin-top:1rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+                    <button class="btn btn-primary" onclick="executeExport()" id="exportBtn" style="display:flex;align-items:center;gap:0.5rem;padding:0.875rem 2rem">
+                        <span>📤</span> Выгрузить в Google Таблицу
+                    </button>
+                    <div id="exportStatus" style="font-size:0.875rem;color:var(--text-secondary);opacity:0;transition:opacity 0.3s"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Login Modal -->
+<div id="admin-login-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(4px);">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:24px;padding:2.5rem;width:90%;max-width:400px;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+        <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem">Доступ ограничен</h3>
+        <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1.5rem">Введите код (по умолчанию 0000)</p>
+        <input type="password" id="adminPin" placeholder="****" style="width:100%;padding:1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-size:1.5rem;letter-spacing:0.5rem;text-align:center;margin-bottom:1.5rem;font-family:'JetBrains Mono',monospace;" onkeydown="if(event.key==='Enter')checkAdminPin()">
+        <div style="display:flex;gap:1rem">
+            <button class="btn btn-secondary" style="flex:1" onclick="closeAdminLogin()">Отмена</button>
+            <button class="btn btn-primary" style="flex:1" onclick="checkAdminPin()">Войти</button>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Panel Modal -->
+<div id="admin-panel-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(6px);">
+    <div style="background:var(--bg-card);border:1px solid var(--accent-blue);border-radius:24px;padding:2.5rem;width:90%;max-width:800px;max-height:90vh;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+            <h3 style="font-size:1.5rem;font-weight:800;display:flex;align-items:center;gap:0.75rem"><span style="color:var(--accent-blue)">⚙️</span> Настройки Промптов (Google Sheet)</h3>
+            <button onclick="closeAdminPanel()" style="background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer">×</button>
+        </div>
+        <div style="margin-bottom:1.5rem">
+            <label style="display:block;font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem;font-weight:600;text-transform:uppercase">Субагент</label>
+            <select id="adminAgentSelect" onchange="loadAgentPrompt()" style="width:100%;padding:0.875rem 1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:'Manrope',sans-serif;cursor:pointer">
+                <option value="analyst">📊 Аналитик</option>
+                <option value="coach">🎯 Тренер / Коуч</option>
+                <option value="copywriter">✍️ Копирайтер / SMM</option>
+                <option value="designer">🎨 Дизайнер</option>
+                <option value="hr">🧘 HR / Ментор</option>
+                <option value="general">🤖 Основной Ассистент</option>
+            </select>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;min-height:300px">
+            <label style="display:flex;justify-content:space-between;font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem;font-weight:600;text-transform:uppercase">
+                <span>Инструкция (в тексте используйте метку [CONTEXT] для данных из таблицы)</span>
+            </label>
+            <textarea id="adminPromptText" style="flex:1;width:100%;padding:1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:'Manrope',sans-serif;font-size:0.9rem;resize:vertical;min-height:250px" placeholder="Загрузка..."></textarea>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;padding-top:1.5rem;border-top:1px solid var(--border)">
+            <div id="promptStatus" style="font-size:0.8rem;color:var(--accent-green)"></div>
+            <button class="btn btn-primary" onclick="saveAdminPrompt()" style="padding:0.75rem 2rem" id="savePromptBtn">💾 Сохранить в Google Таблицу</button>
+        </div>
+    </div>
 </div>
 
 <!-- Voice overlay -->
@@ -924,6 +1003,15 @@ let isRecording = false;
 let recognition = null;
 let tasks = JSON.parse(localStorage.getItem('uk_tasks') || '[]');
 let liveSheetData = "Данные из Google Таблиц пока не загружены.";
+
+let aiPrompts = {
+    analyst: `Ты выдающийся Data Scientist и Финансовый Аналитик. [CONTEXT]\nАнализируй показатели, ищи инсайты, точки роста и узкие горлышки воронки продаж Ukids. Форматируй ответы четко: цифры, выводы, рекомендации (используй markdown таблицы).`,
+    coach: `Ты опытный бизнес-тренер и коуч по продажам. [CONTEXT]\nПомогай составлять скрипты для продуктов Ukids (soft skills), отрабатывать сложные возражения родителей и дожимать клиентов на оплату. Давай конкретные речевые модули.`,
+    copywriter: `Ты креативный Копирайтер и SMM-специалист в сфере EdTech. [CONTEXT]\nПиши продающие, мотивационные и вовлекающие тексты и рассылки для родителей. Используй сторителлинг, живой язык и четкую структуру.`,
+    designer: `Ты UX/UI дизайнер и спец по презентациям. [CONTEXT]\nПомогай структурировать информацию для слайдов для вебинаров Ukids, предлагай визуальные решения, разбивай текст на буллиты и давай советы по визуальной композиции.`,
+    hr: `Ты заботливый HR-директор и Ментор. [CONTEXT]\nТвоя цель — предотвращать выгорание менеджеров, контролировать баланс работы и жизни (work-life balance), а также помогать с планами адаптации новых стажеров.`,
+    general: `Ты AI-ассистент Геннадия — руководителя отдела продаж онлайн-академии Ukids (развитие soft skills для детей 6-15 лет).\n[CONTEXT]\nГовори кратко, конкретно, по-русски. Без лишних вступлений. Помогай маршрутизировать запросы и управлять задачами.`
+};
 
 // Seed default tasks if empty
 if (tasks.length === 0) {
@@ -1141,20 +1229,8 @@ async function sendMessage() {
         const agentMode = document.getElementById('agentModeSelect') ? document.getElementById('agentModeSelect').value : 'general';
         const baseContext = `Контекст команды продаж: 5 менеджеров.\nТекущие задачи РОПа: ${getOpenTasksList()}\n\n${liveSheetData}`;
         
-        let systemPrompt = '';
-        if (agentMode === 'analyst') {
-            systemPrompt = `Ты выдающийся Data Scientist и Финансовый Аналитик. ${baseContext}\nАнализируй показатели, ищи инсайты, точки роста и узкие горлышки воронки продаж Ukids. Форматируй ответы четко: цифры, выводы, рекомендации (используй markdown таблицы).`;
-        } else if (agentMode === 'coach') {
-            systemPrompt = `Ты опытный бизнес-тренер и коуч по продажам. ${baseContext}\nПомогай составлять скрипты для продуктов Ukids (soft skills), отрабатывать сложные возражения родителей и дожимать клиентов на оплату. Давай конкретные речевые модули.`;
-        } else if (agentMode === 'copywriter') {
-            systemPrompt = `Ты креативный Копирайтер и SMM-специалист в сфере EdTech. ${baseContext}\nПиши продающие, мотивационные и вовлекающие тексты и рассылки для родителей. Используй сторителлинг, живой язык и четкую структуру.`;
-        } else if (agentMode === 'designer') {
-            systemPrompt = `Ты UX/UI дизайнер и спец по презентациям. ${baseContext}\nПомогай структурировать информацию для слайдов для вебинаров Ukids, предлагай визуальные решения, разбивай текст на буллиты и давай советы по визуальной композиции.`;
-        } else if (agentMode === 'hr') {
-            systemPrompt = `Ты заботливый HR-директор и Ментор. ${baseContext}\nТвоя цель — предотвращать выгорание менеджеров, контролировать баланс работы и жизни (work-life balance), а также помогать с планами адаптации новых стажеров.`;
-        } else {
-            systemPrompt = `Ты AI-ассистент Геннадия — руководителя отдела продаж онлайн-академии Ukids (развитие soft skills для детей 6-15 лет).\n${baseContext}\nГовори кратко, конкретно, по-русски. Без лишних вступлений. Помогай маршрутизировать запросы и управлять задачами.`;
-        }
+        const rawPrompt = aiPrompts[agentMode] || aiPrompts.general;
+        const systemPrompt = rawPrompt.replace('[CONTEXT]', baseContext);
 
         const resp = await fetch('/api/claude', {
             method: 'POST',
@@ -1249,6 +1325,108 @@ function stopVoice() {
     if (recognition) recognition.stop();
     document.getElementById('voiceBtn').classList.remove('recording');
     document.getElementById('voice-overlay').classList.remove('show');
+}
+
+// ── Admin ──
+function openAdminLogin() {
+    document.getElementById('adminPin').value = '';
+    document.getElementById('admin-login-overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('adminPin').focus(), 100);
+}
+function closeAdminLogin() { document.getElementById('admin-login-overlay').style.display = 'none'; }
+function checkAdminPin() {
+    const pin = document.getElementById('adminPin').value;
+    if (pin === '0000' || pin === '1234') {
+        closeAdminLogin();
+        document.getElementById('admin-panel-overlay').style.display = 'flex';
+        fetchPromptsFromSheet(); 
+        loadAgentPrompt();
+    } else {
+        alert("Неверный код! Код по умолчанию: 0000");
+    }
+}
+function closeAdminPanel() { document.getElementById('admin-panel-overlay').style.display = 'none'; }
+
+function loadAgentPrompt() {
+    const sel = document.getElementById('adminAgentSelect').value;
+    document.getElementById('adminPromptText').value = aiPrompts[sel] || '';
+    document.getElementById('promptStatus').textContent = '';
+}
+
+async function fetchPromptsFromSheet() {
+    try {
+        const res = await fetch('/api/prompts');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.prompts && Object.keys(data.prompts).length > 0) {
+                aiPrompts = { ...aiPrompts, ...data.prompts };
+                loadAgentPrompt();
+            }
+        }
+    } catch(e) { console.log("Используем базовые промпты."); }
+}
+
+async function saveAdminPrompt() {
+    const sel = document.getElementById('adminAgentSelect').value;
+    const text = document.getElementById('adminPromptText').value;
+    aiPrompts[sel] = text;
+    
+    document.getElementById('promptStatus').textContent = '⏳ Сохраняем...';
+    try {
+        const res = await fetch('/api/prompts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ agent: sel, prompt: text })
+        });
+        if (res.ok) document.getElementById('promptStatus').textContent = '✅ Сохранено в Таблицу';
+        else document.getElementById('promptStatus').textContent = '⚠️ Ошибка сохранения';
+    } catch(e) {
+        document.getElementById('promptStatus').textContent = '⚠️ Ошибка сети';
+    }
+}
+
+// ── Export ──
+async function executeExport() {
+    const type = document.getElementById('exportTypeSelect').value;
+    const sheetName = document.getElementById('exportSheetName').value.trim() || 'Выгрузка_Отчет';
+    const statusEl = document.getElementById('exportStatus');
+    const btn = document.getElementById('exportBtn');
+    
+    let exportData = [];
+    if (type === 'chat_history') {
+        if (messages.length === 0) { alert('Текущий диалог с AI пуст!'); return; }
+        exportData = [['Роль', 'Сообщение', 'Дата'], ...messages.map(m => [m.role === 'user' ? 'РОП' : 'AI-Ассистент', m.content, new Date().toLocaleString('ru')])];
+    } else if (type === 'tasks') {
+        if (tasks.length === 0) { alert('Нет задач для выгрузки!'); return; }
+        exportData = [['ID', 'Задача', 'Приоритет', 'Статус'], ...tasks.map(t => [t.id, t.title, t.priority, t.done ? 'Выполнена' : 'Открыта'])];
+    }
+    
+    btn.disabled = true;
+    statusEl.style.opacity = 1;
+    statusEl.textContent = '⏳ Создаем вкладку и выгружаем данные...';
+    statusEl.style.color = 'var(--text-secondary)';
+    
+    try {
+        const res = await fetch('/api/export', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ sheetName, data: exportData })
+        });
+        
+        const json = await res.json();
+        if (res.ok) {
+            statusEl.textContent = '✅ Успешно выгружено в Google Таблицу!';
+            statusEl.style.color = 'var(--accent-green)';
+        } else {
+            statusEl.textContent = '❌ Ошибка: ' + json.error;
+            statusEl.style.color = 'var(--accent-red)';
+        }
+    } catch(e) {
+        statusEl.textContent = '❌ Ошибка соединения сервера';
+        statusEl.style.color = 'var(--accent-red)';
+    } finally {
+        setTimeout(() => { btn.disabled = false; }, 2000);
+    }
 }
 </script>
 </body>

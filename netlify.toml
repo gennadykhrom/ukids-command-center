@@ -10,3 +10,13 @@
   from = "/api/data"
   to = "/.netlify/functions/data"
   status = 200
+
+[[redirects]]
+  from = "/api/prompts"
+  to = "/.netlify/functions/prompts"
+  status = 200
+
+[[redirects]]
+  from = "/api/export"
+  to = "/.netlify/functions/export"
+  status = 200
