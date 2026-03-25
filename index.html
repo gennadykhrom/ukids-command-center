@@ -949,7 +949,8 @@ async function loadSheetData() {
         const res = await fetch('/api/data');
         if (res.ok) {
             const json = await res.json();
-            const rows = json.data.slice(0, 150); // limit rows to save tokens
+            // Берем до 700 строк (хватит для всей базы продаж) из самого первого листа
+            const rows = json.data.slice(0, 700); 
             liveSheetData = `Свежие данные из Google Таблицы (лист ${json.sheetName}):\n` + rows.map(r => r.join(' | ')).join('\n');
             console.log('Google Sheets data loaded:', json.rowCount, 'rows');
         }
