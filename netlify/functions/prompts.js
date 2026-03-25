@@ -6,10 +6,10 @@ exports.handler = async function(event, context) {
 
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : '';
-    const spreadsheetId = process.env.SPREADSHEET_ID;
+    const spreadsheetId = process.env.EXPORT_SPREADSHEET_ID;
 
     if (!clientEmail || !privateKey || !spreadsheetId) {
-        return { statusCode: 500, body: JSON.stringify({ error: "Отсутствуют ключи доступа к Google Sheets" }) };
+        return { statusCode: 500, body: JSON.stringify({ error: "Отсутствует переменная EXPORT_SPREADSHEET_ID в Netlify" }) };
     }
 
     const auth = new google.auth.GoogleAuth({
