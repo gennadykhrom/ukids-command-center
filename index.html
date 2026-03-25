@@ -1037,8 +1037,8 @@ async function loadSheetData() {
         const res = await fetch('/api/data');
         if (res.ok) {
             const json = await res.json();
-            // Берем до 700 строк (хватит для всей базы продаж) из самого первого листа
-            const rows = json.data.slice(0, 700); 
+            // Снизили лимит до 300 строк, так как таблица содержит массивные тексты, переполняющие 200k токенов
+            const rows = json.data.slice(0, 300); 
             liveSheetData = `Свежие данные из Google Таблицы (лист ${json.sheetName}):\n` + rows.map(r => r.join(' | ')).join('\n');
             console.log('Google Sheets data loaded:', json.rowCount, 'rows');
         }
